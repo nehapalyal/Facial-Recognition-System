@@ -117,21 +117,23 @@ class CamApp(App):
         # Building results array
         results = []
         for image in os.listdir(os.path.join('application_data', 'verification_image')):
-            input_img = self.preprocess(os.path.join('application_data', 'input_image', 'input_image.jpg'))
-            validation_img = self.preprocess(os.path.join('application_data', 'verification_image', image))
-        
-            # Making Predictions 
-            result = self.model.predict(list(np.expand_dims([input_img, validation_img], axis=1)))
-            results.append(result)
-    
-            # Detection Threshold: Metric above which a prediciton is considered positive 
-        detection = np.sum(np.array(results) > detection_threshold)
-    
-            # Verification Threshold: Proportion of positive predictions / total positive samples 
-        verification = detection / len(os.listdir(os.path.join('application_data', 'verification_image'))) 
-        verified = verification > verification_threshold
+            if image.endswith('.jpg') or image.endswith('.jpeg') or image.endswith('.png'):
+                input_img = self.preprocess(os.path.join('application_data', 'input_image', 'input_image.jpg'))
+                validation_img = self.preprocess(os.path.join('application_data', 'verification_image', image))
 
-            # setting verification text
+                # Make Predictions 
+                result = self.model.predict(list(np.expand_dims([input_img, validation_img], axis=1)))
+                results.append(result)
+
+        # Detection Threshold: Metric above which a prediction is considered positive
+        detection = np.sum(np.squeeze(results) > detection_threshold)
+
+        # Verification Threshold: Proportion of positive predictions / total
+        verification = detection / len(results)
+        verified = verification > verification_threshold
+    
+
+        # setting verification text
         self.verification_label.text = 'Verified' if verified == True else 'Unverified'
     
             # log out details
